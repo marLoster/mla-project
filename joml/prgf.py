@@ -4,20 +4,27 @@ import numpy as np
 
 
 class PRGF(ABC):
-    def __init__(self, attack_model, surrogate_model, sigma):
+    def __init__(self, attack_model, surrogate_model, sigma, const_keep_factor=None, use_v=False):
         self._attack_model = attack_model
         self._surrogate_model = surrogate_model
         self._sigma = sigma
         self._D = None
+        self._const_keep_factor = const_keep_factor
+        self._use_v = use_v
 
     def __call__(self, x, y, q, *args, **kwargs):
         # main algorithm fun
         self._D = x.shape
         v = self._surrogate_model.get_gradient(x)
+        if self._use_v:
+            print("returning original (use_v set to True)...")
+            return v
 
-        alpha = self._cosine_similarity(x, y, v)
-
-        keep_factor = self._get_lambda(alpha, q)
+        if self._const_keep_factor:
+            keep_factor = self._const_keep_factor
+        else:
+            alpha = self._cosine_similarity(x, y, v)
+            keep_factor = self._get_lambda(alpha, q)
 
         if self._is_acceptable(keep_factor):
             print("returning original...")

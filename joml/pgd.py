@@ -1,6 +1,7 @@
 import numpy as np
 
 from joml.prgfbs import PRGFBS
+from joml.prgfga import PRGFGA
 
 
 class PGD:
@@ -13,6 +14,8 @@ class PGD:
         # initialize prgf
         if algorithm == "PRGF-BS":
             self._prgf = PRGFBS(attack_model, surrogate_model, **algorithm_keywords)
+        elif algorithm == "PRGF-GA":
+            self._prgf = PRGFGA(attack_model, surrogate_model, **algorithm_keywords)
         else:
             raise TypeError(f"Invalid algorithm name {algorithm}")
 
@@ -23,6 +26,8 @@ class PGD:
             if not i%10:
                 print(f"iter: {i}")
             estimated_gradient = self._prgf(prev_image, label, q)
+            if np.sum(estimated_gradient.reshape(-1)) == 0:
+                print("estimated_gradient = 0")
             adversarial_image = prev_image + lr*estimated_gradient
             adversarial_image = np.clip(adversarial_image, image*(1-eps), image*(1+eps))
             adversarial_image = np.clip(adversarial_image, 0, 1)
@@ -32,6 +37,7 @@ class PGD:
                 return True, adversarial_image
             else:
                 prev_image = adversarial_image
+                print(f"loss: {self._attack_model.f(adversarial_image, label)}")
 
         print("model was not broken")
         return False, adversarial_image

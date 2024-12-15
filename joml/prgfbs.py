@@ -5,8 +5,8 @@ import numpy as np
 from .prgf import PRGF
 
 class PRGFBS(PRGF):
-    def __init__(self, attack_model, surrogate_model, sigma):
-        super().__init__(attack_model, surrogate_model, sigma)
+    def __init__(self, attack_model, surrogate_model, sigma, const_keep_factor=None, use_v=False):
+        super().__init__(attack_model, surrogate_model, sigma, const_keep_factor, use_v)
 
     def _get_lambda(self, alpha, q):
         D = reduce(lambda x,y: x*y, self._D)
@@ -33,7 +33,7 @@ class PRGFBS(PRGF):
         result_matrices = np.sign(identity_matrices - product_matrices)
         u = np.sqrt(keep_factor) * v + np.sqrt(1 - keep_factor)*result_matrices
 
-        print(x.shape, u.shape)
+        # print(x.shape, u.shape)
         return u*(self._attack_model.f(np.clip(x + self._sigma*u,0,1), y) - self._attack_model.f(x, y))/self._sigma
 
     def _final_correction(self, result, v, q, keep_factor):
